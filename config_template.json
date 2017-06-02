@@ -1,0 +1,8 @@
+{
+ "Token": "full token here if you do not want to login on each run",
+ "ClientId": "change this",
+ "ClientSecret" : "change this",
+ "AuthorizationBaseUrl" : "https://www.bondora.com/oauth/authorize",
+ "TokenUrl" : "https://api.bondora.com/oauth/access_token",
+ "Scope" : ["Investments","BidsRead","BidsEdit","SmSell","SmBuy","ReportCreate","ReportRead"]
+}
