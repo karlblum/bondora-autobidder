@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import confusion_matrix
 from sklearn import preprocessing
 from time import time
 from collections import defaultdict
@@ -59,12 +58,7 @@ class BondoraPredictor:
         # filter only loans older than a year
         df = df[(df['LoanApplicationStartedDate'] < '2016-06-01')]
         df['DebtToIncome'] = df['LiabilitiesTotal']/df['IncomeTotal']
-        #for i in range(1,11):
-        #    e = 0.1*i
-        #    s = e-0.1
-        #    print("binning {}-{} [{}]".format(s,e,i))
-        #    df.loc[(df['ExpectedLoss'] > s) & (df['ExpectedLoss'] <= e), 'ExpectedLoss'] = i
-
+        
         # define good/bad loans, good=true (defaultDate is not set)
         df['Status'] = df['DefaultDate'].isnull()
 
@@ -85,7 +79,7 @@ class BondoraPredictor:
         gp = df.loc[df['Status'] == True, 'Status'].count()/df.shape[0]
         print("General probability of good loan: %0.2f" % gp)
 
-        
+
         for rating in self.labelEncoders['Rating_V2'].classes_:
             r2_idx = self.transformValue('Rating_V2',[rating])[0]
             gp = df[(df['Status'] == True) & (df['Rating_V2'] == r2_idx)].shape[0] / df[df['Rating_V2'] == r2_idx].shape[0]
@@ -137,4 +131,4 @@ class BondoraPredictor:
         return transformed_value
 
 
-bp = BondoraPredictor()
+#bp = BondoraPredictor()
