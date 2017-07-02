@@ -8,7 +8,7 @@ import json
 
 with open('config.json', 'r') as f:
     config = json.load(f)
-    
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
@@ -35,7 +35,7 @@ scope = config['Scope']
 if('Token' in config):
     print("Using token from configuration file")
     bondora = OAuth2Session(client_id=client_id, token=config['Token'])
-else:  
+else:
     bondora = OAuth2Session(client_id=client_id, auto_refresh_url=token_url, scope=scope)
     authorization_url, state = bondora.authorization_url(authorization_base_url)
     print('Please go to this URL and authorize access:')
@@ -50,19 +50,19 @@ else:
 
 logger.info("Initiating Bondora autobidder")
 while(True):
-    
+
     available_auctions = []
     interesting_auctions = []
     already_bidded_auctions = []
     my_bids = []
-    
+
     try:
-        available_auctions = bondora.get('https://api.bondora.com/api/v1/auctions').json()['Payload']          
+        available_auctions = bondora.get('https://api.bondora.com/api/v1/auctions').json()['Payload']
         my_bids = bondora.get('https://api.bondora.com/api/v1/bids').json()['Payload']
     except:
         logger.exception("Failed getting data from Bondora")
-    
-    
+
+
     for a in available_auctions:
         interesting = True
         for b in my_bids:
@@ -70,17 +70,19 @@ while(True):
                 already_bidded_auctions.append(a)
                 interesting = False
                 break
-                
+
         if (interesting):
             a['Rating_V2'] = predictor.transformValue('Rating_V2',[a['Rating']])[0]
             a['Prediction'] = predictor.predict(a)
-            
+
             if(a['Prediction']):
                 interesting_auctions.append(a)
-        
+
     if len(available_auctions) > 0:
-        logger.info("Auctions: {}, invested: {}, interesting: {}".format(len(available_auctions), len(already_bidded_auctions), len(interesting_auctions)))     
-    
+        logger.info("Auctions: {}, invested: {}, interesting: {}".format(len(available_auctions), len(already_bidded_auctions), len(interesting_auctions)))
+        for a in available_auctions:
+            logger.info("Auction: {}".format(a))     
+
         for a in interesting_auctions:
             try:
                 balance = bondora.get('https://api.bondora.com/api/v1/account/balance').json()['Payload']
@@ -88,10 +90,10 @@ while(True):
             except:
                 logger.exception("Failed getting balance data from Bondora")
                 break
-            
+
             if(balance['TotalAvailable'] > 5):
                 logger.info("Bidding for auction: {}".format(a['AuctionId']))
-                        
+
                 json_data = {
                       "Bids": [
                         {
@@ -101,11 +103,11 @@ while(True):
                         }
                       ]
                     }
-                
+
                 bid_result = bondora.post('https://api.bondora.com/api/v1/bid', json=json_data).json()
                 logger.info("Bidding success={}".format(bid_result['Success']))
             else:
                 logger.info("Insufficient funds for bidding ({})".format(balance['TotalAvailable']))
-        
-    
+
+
     time.sleep(10)
